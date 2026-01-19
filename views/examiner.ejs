@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('layouts/header', { title: 'Examiner Dashboard' }) %>
+    <link href="/css/styles.css" rel="stylesheet">
+    <style>
+        /* Theme Variables */
+        :root {
+            --primary-color: #005bb5; /* Softer blue */
+            --success-color: #2ca02c; /* Vibrant green */
+            --danger-color: #d32f2f; /* Rich red */
+            --neutral-color: #6b7280; /* Gray for disabled/pending */
+            --background-light: #f9fafb;
+            --background-white: #ffffff;
+            --border-color: #e5e7eb;
+            --hover-light: #f1f5f9;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --spacing-unit: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            background-color: var(--background-light);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            padding: calc(var(--spacing-unit) * 3);
+            margin-bottom: calc(var(--spacing-unit) * 4);
+        }
+
+        /* Filter Form */
+        .filter-form {
+            background-color: var(--background-white);
+            padding: calc(var(--spacing-unit) * 2.5);
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: calc(var(--spacing-unit) * 3);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+        }
+
+        .filter-form select {
+            padding: var(--spacing-unit);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: var(--background-white);
+            transition: var(--transition);
+            flex-grow: 1;
+        }
+
+        .filter-form select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 91, 181, 0.2);
+        }
+
+        .filter-form button {
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: var(--background-white);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-form button:hover {
+            background-color: #004a99;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-form button:active {
+            transform: translateY(0);
+        }
+
+        /* Table Styling */
+        .user-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: calc(var(--spacing-unit) * 2.5) 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            background-color: var(--background-white);
+        }
+
+        .user-table th, .user-table td {
+            padding: calc(var(--spacing-unit) * 1.75);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .user-table th {
+            background-color: var(--primary-color);
+            color: var(--background-white);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .user-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .user-table tr:hover {
+            background-color: var(--hover-light);
+        }
+
+        /* Test Result Controls */
+        .test-result-form {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+        }
+
+        .test-result-select {
+            padding: var(--spacing-unit);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--background-white);
+            font-size: 0.9rem;
+            transition: var(--transition);
+            max-width: 120px;
+        }
+
+        .test-result-select:focus {
+            outline: none;
+            border-color: var(--success-color);
+            box-shadow: 0 0 0 3px rgba(44, 160, 44, 0.2);
+        }
+
+        .test-result-select:disabled {
+            background-color: var(--background-light);
+            color: var(--neutral-color);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .test-result-button {
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border: none;
+            border-radius: 4px;
+            background-color: var(--success-color);
+            color: var(--background-white);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 80px;
+        }
+
+        .test-result-button:hover:not(:disabled) {
+            background-color: #248f24;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .test-result-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .test-result-button:disabled {
+            background-color: var(--neutral-color);
+            color: var(--background-white);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Status Indicators */
+        .status-pending {
+            color: var(--neutral-color);
+            font-style: italic;
+            font-weight: 500;
+        }
+
+        .status-pass {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .status-fail {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 2.5);
+            border-radius: 6px;
+            margin-bottom: calc(var(--spacing-unit) * 2.5);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+        }
+
+        .alert-success {
+            background-color: #e6f4ea;
+            color: #1a531a;
+            border: 1px solid #a3d7a3;
+        }
+
+        .alert-danger {
+            background-color: #fce4e4;
+            color: #5a1c1c;
+            border: 1px solid #e57373;
+        }
+
+        .alert-info {
+            background-color: #e6f0fa;
+            color: #1e4976;
+            border: 1px solid #90caf9;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .user-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .user-table th, .user-table td {
+                min-width: 100px;
+            }
+
+            .filter-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-form select,
+            .filter-form button {
+                width: 100%;
+            }
+
+            .test-result-form {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: calc(var(--spacing-unit) * 0.75);
+            }
+
+            .test-result-select {
+                width: 100%;
+                max-width: none;
+            }
+
+            .test-result-button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: calc(var(--spacing-unit) * 2);
+            }
+
+            .filter-form {
+                padding: calc(var(--spacing-unit) * 2);
+            }
+
+            .user-table th, .user-table td {
+                padding: var(--spacing-unit);
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('layouts/navbar', { user: user }) %>
+
+    <header class="masthead" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/img/hero_image.jpg')">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="page-heading text-center">
+                        <h1 style="color: #ffffff">Examiner Dashboard</h1>
+                        <span class="subheading" style="color: #e5e7eb">Manage Driver Test Results</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mb-4">
+        <div class="container px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-12">
+                    <div class="dashboard-container">
+                        <% if (message) { %>
+                            <div class="alert alert-<%= message.type %>">
+                                <span><%= message.text %></span>
+                            </div>
+                        <% } %>
+
+                        <!-- Filter Form -->
+                        <form id="filterForm" action="/examiner" method="GET" class="filter-form">
+                            <select id="testTypeFilter" name="testType">
+                                <option value="">All Test Types</option>
+                                <option value="G" <%= testType === 'G' ? 'selected' : '' %>>G</option>
+                                <option value="G2" <%= testType === 'G2' ? 'selected' : '' %>>G2</option>
+                            </select>
+                            <button type="submit">Apply Filter</button>
+                        </form>
+
+                        <!-- User List -->
+                        <table class="user-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Test Type</th>
+                                    <th>Car Make</th>
+                                    <th>Car Model</th>
+                                    <th>Test Result</th>
+                                    <th>Update Result</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% if (users && users.length > 0) { %>
+                                    <% users.forEach(user => { %>
+                                        <tr>
+                                            <td><strong><%= user.firstname %> <%= user.lastname %></strong></td>
+                                            <td><span class="badge bg-info text-dark"><%= user.testType || 'N/A' %></span></td>
+                                            <td><%= user.car_details?.carMake || 'N/A' %></td>
+                                            <td><%= user.car_details?.carModel || 'N/A' %></td>
+                                            <td>
+                                                <% if (user.testResult === 'Pass') { %>
+                                                    <span class="status-pass">PASS</span>
+                                                <% } else if (user.testResult === 'Fail') { %>
+                                                    <span class="status-fail">FAIL</span>
+                                                <% } else { %>
+                                                    <span class="status-pending">Pending</span>
+                                                <% } %>
+                                            </td>
+                                            <td>
+                                                <form class="test-result-form" action="/examiner" method="POST">
+                                                    <input type="hidden" name="userId" value="<%= user._id %>">
+                                                    <select name="testResult" class="test-result-select" <%= !user.testType ? 'disabled' : '' %>>
+                                                        <option value="" <%= !user.testResult ? 'selected' : '' %>>Select</option>
+                                                        <option value="Pass" <%= user.testResult === 'Pass' ? 'selected' : '' %>>Pass</option>
+                                                        <option value="Fail" <%= user.testResult === 'Fail' ? 'selected' : '' %>>Fail</option>
+                                                    </select>
+                                                    <button type="submit" class="test-result-button" <%= !user.testType ? 'disabled' : '' %>>
+                                                        <%= !user.testType ? 'No Test' : 'Save' %>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    <% }) %>
+                                <% } else { %>
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="alert alert-info">
+                                                <span>No users found for the selected test type.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('layouts/footer') %>
+    <%- include('layouts/scripts') %>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const testSelects = document.querySelectorAll('.test-result-select');
+            testSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    const row = this.closest('tr');
+                    row.style.backgroundColor = 'var(--hover-light)';
+                    row.style.transition = 'background-color 0.3s ease';
+                    setTimeout(() => {
+                        row.style.backgroundColor = '';
+                    }, 1500);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

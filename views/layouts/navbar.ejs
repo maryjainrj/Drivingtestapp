@@ -1,0 +1,36 @@
+<nav class="navbar navbar-expand-lg navbar-light" id="mainNav">
+    <div class="container px-4 px-lg-5">
+        <a class="navbar-brand" href="/">Book Drive Test</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+            Menu
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <% if (user) { %>
+                    <% if (user.userType !== 'Driver') { %>
+                        <li class="nav-item"><a class="nav-link" href="/home?userId=<%= user._id %>">Home</a></li>
+                    <% } %>
+                    <!-- admin login -->
+                    <% if (user.userType == 'Admin') { %>
+                        <li class="nav-item"><a class="nav-link" href="/appointment?userId=<%= user._id %>">Appointment</a></li>
+                    <% } %>
+                    <!-- Examiner login -->
+                  <!-- Examiner login -->
+<% if (user.userType === 'Examiner') { %>
+    <li class="nav-item"><a class="nav-link" href="/examiner">Examiner Dashboard</a></li>
+<% } %>
+                    <% if (user.userType === "Driver") { %>
+                        <li class="nav-item"><a class="nav-link" href="/home?userId=<%= user._id %>">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/g2?userId=<%= user._id %>">G2 Page</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/g?userId=<%= user._id %>">G Page</a></li>
+                    <% } %>
+                    <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
+                <% } else { %>
+                    <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/signup">Sign Up</a></li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>

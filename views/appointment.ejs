@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('layouts/header', { title: 'Admin - Manage Appointments' }) %>
+    <link href="/css/styles.css" rel="stylesheet">
+    <!-- Bootstrap datepicker for date selection -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+    <style>
+
+        :root {
+            --primary-color: #005bb5;
+            --success-color: #2ca02c;
+            --danger-color: #d32f2f;
+            --neutral-color: #6b7280;
+            --background-light: #f9fafb;
+            --background-white: #ffffff;
+            --border-color: #e5e7eb;
+            --hover-light: #f1f5f9;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --spacing-unit: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        .dashboard-container {
+            background-color: var(--background-light);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            padding: calc(var(--spacing-unit) * 3);
+            margin-bottom: calc(var(--spacing-unit) * 4);
+        }
+
+       
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: calc(var(--spacing-unit) * 3);
+        }
+
+        .tab-button {
+            padding: calc(var(--spacing-unit) * 1.5) calc(var(--spacing-unit) * 3);
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--neutral-color);
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-button:hover:not(.active) {
+            color: #0077e6;
+            border-bottom-color: #d1e3f7;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: calc(var(--spacing-unit) * 3);
+        }
+
+        .slot-btn {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .slot-btn.disabled {
+            background-color: #d3d3d3;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        
+        .filter-form {
+            background-color: var(--background-white);
+            padding: calc(var(--spacing-unit) * 2.5);
+            border-radius: 6px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: calc(var(--spacing-unit) * 3);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-unit);
+        }
+
+        .filter-form select, .filter-form input {
+            padding: var(--spacing-unit);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: var(--background-white);
+            transition: var(--transition);
+            flex-grow: 1;
+        }
+
+        .filter-form select:focus, .filter-form input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 91, 181, 0.2);
+        }
+
+        .filter-form button {
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border: none;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            color: var(--background-white);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-form button:hover {
+            background-color: #004a99;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-form button:active {
+            transform: translateY(0);
+        }
+
+      
+        .appointment-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: calc(var(--spacing-unit) * 2.5) 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            background-color: var(--background-white);
+        }
+
+        .appointment-table th, .appointment-table td {
+            padding: calc(var(--spacing-unit) * 1.75);
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .appointment-table th {
+            background-color: var(--primary-color);
+            color: var(--background-white);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+
+        .appointment-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .appointment-table tr:hover {
+            background-color: var(--hover-light);
+        }
+
+        .action-button {
+            padding: var(--spacing-unit) calc(var(--spacing-unit) * 2);
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .action-button.view {
+            background-color: var(--primary-color);
+            color: var(--background-white);
+        }
+
+  
+        .status-available {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+
+        .status-booked {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+
+     
+        @media (max-width: 768px) {
+            .appointment-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .appointment-table th, .appointment-table td {
+                min-width: 100px;
+            }
+
+            .filter-form, .tab-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-form select,
+            .filter-form button,
+            .filter-form input {
+                width: 100%;
+            }
+
+            .slot-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-container {
+                padding: calc(var(--spacing-unit) * 2);
+            }
+
+            .filter-form {
+                padding: calc(var(--spacing-unit) * 2);
+            }
+
+            .appointment-table th, .appointment-table td {
+                padding: var(--spacing-unit);
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('layouts/navbar', { user: user }) %>
+
+    <header class="masthead" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/img/hero_image.jpg')">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="page-heading text-center">
+                        <h1 style="color: #ffffff">Admin Dashboard</h1>
+                        <span class="subheading" style="color: #e5e7eb">Manage Appointments & View Driver Details</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="mb-4">
+        <div class="container px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-12">
+                    <div class="dashboard-container">
+                        <!-- Alert message -->
+                        <% if (typeof message !== 'undefined' && message) { %>
+                            <div class="alert alert-<%= message.type %> alert-dismissible fade show" role="alert">
+                                <%= message.text %>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <% } %>
+
+                        <div class="tab-container">
+                            <button class="tab-button <%= tabToShow === 'create-slots' ? 'active' : '' %>" data-tab="create-slots">Create Slots</button>
+                            <button class="tab-button <%= tabToShow === 'view-appointments' ? 'active' : '' %>" data-tab="view-appointments">View Appointments</button>
+                            <button class="tab-button <%= tabToShow === 'driver-details' ? 'active' : '' %>" data-tab="driver-details">Driver Details</button>
+                        </div>
+
+                        <!-- Create Slots  -->
+                        <div id="create-slots" class="tab-content <%= tabToShow === 'create-slots' ? 'active' : '' %>">
+                            <form id="appointmentForm" action="/appointment" method="POST">
+                            
+                                <div class="form-floating mb-3">
+                                    <input class="form-control" id="appointmentDate" name="date" type="text" 
+                                           placeholder="Select a date..." 
+                                           value="<%= typeof selectedDate !== 'undefined' ? selectedDate : '' %>" required />
+                                    <label for="appointmentDate">Select Date</label>
+                                </div>
+
+                                <!-- time slots container - hidden until date is selected -->
+                                <div id="timeSlotsContainer" <%= typeof selectedDate !== 'undefined' && selectedDate ? 'style="display: block;"' : 'style="display: none;"' %>>
+                                    <h5 class="my-3">Available Time Slots</h5>
+                                    <div class="slot-grid" id="timeSlotsGrid">
+                                        <% 
+                                            // Define all possible time slots
+                                            const allSlots = [
+                                                "9:00", "9:30", "10:00", "10:30", "11:00", 
+                                                "11:30", "12:00", "12:30", "1:00", "1:30"
+                                            ];
+                                            
+                                            // Loop through slots and check if they're already booked
+                                            allSlots.forEach(slot => {
+                                                const isBooked = typeof existingAppointments !== 'undefined' && selectedDate ? 
+                                                    existingAppointments.some(app => 
+                                                        app.date === selectedDate && app.time === slot) : false;
+                                        %>
+                                            <!-- time slot button with dynamic booked/available state -->
+                                            <button type="button" 
+                                                    class="btn slot-btn <%= isBooked ? 'btn-secondary disabled' : 'btn-outline-primary' %>"
+                                                    data-slot="<%= slot %>"
+                                                    <%= isBooked ? 'disabled' : '' %>>
+                                                <%= slot %> <%= slot.includes("9") || slot.includes("10") || slot.includes("11") ? 'AM' : 'PM' %>
+                                            </button>
+                                        <% }); %>
+                                    </div>
+                                    <!-- hidden input to store selected time slots -->
+                                    <input type="hidden" name="timeSlots" id="selectedSlots">
+                                </div>
+
+                                <!-- submit button - hidden until date is selected -->
+                                <button class="btn btn-primary text-uppercase" id="submitButton" type="submit" 
+                                        <%= typeof selectedDate !== 'undefined' && selectedDate ? 'style="display: block;"' : 'style="display: none;"' %>>Create Slots</button>
+                            </form>
+                        </div>
+
+                        <!-- view appointments - table displaying all appointment slots -->
+                        <div id="view-appointments" class="tab-content <%= tabToShow === 'view-appointments' ? 'active' : '' %>">
+                            <!-- filter controls for appointments -->
+                            <form id="filterAppointmentsForm" action="/appointment" method="GET" class="filter-form">
+                                <!-- <input type="date" id="filterDate" name="filterDate" value="<%= typeof filterDate !== 'undefined' ? filterDate : '' %>"> -->
+                                <select id="availabilityFilter" name="availability">
+                                    <option value="">All Statuses</option>
+                                    <option value="available" <%= typeof availability !== 'undefined' && availability === 'available' ? 'selected' : '' %>>Available</option>
+                                    <option value="booked" <%= typeof availability !== 'undefined' && availability === 'booked' ? 'selected' : '' %>>Booked</option>
+                                </select>
+                                <button type="submit">Apply Filter</button>
+                            </form>
+
+                            <table class="appointment-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <th>Status</th>
+                                        <th>Booked By</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- check if appointments exist -->
+                                    <% if (typeof existingAppointments !== 'undefined' && existingAppointments && existingAppointments.length > 0) { %>
+                                        <% existingAppointments.forEach(appointment => { %>
+                                            <tr>
+                                                <td><%= appointment.date %></td>
+                                                <td><%= appointment.time %> <%= appointment.time.includes("9") || appointment.time.includes("10") || appointment.time.includes("11") ? 'AM' : 'PM' %></td>
+                                                <td>
+                                                    <!-- visual indicator for availability status -->
+                                                    <% if (appointment.isTimeSlotAvailable) { %>
+                                                        <span class="status-available">AVAILABLE</span>
+                                                    <% } else { %>
+                                                        <span class="status-booked">BOOKED</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <!-- show user name if slot is booked -->
+                                                    <% if (!appointment.isTimeSlotAvailable && appointment.userId) { %>
+                                                        <%= typeof appointment.userName !== 'undefined' ? appointment.userName : 'Unknown User' %>
+                                                    <% } else { %>
+                                                        -
+                                                    <% } %>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4">
+                                                <div class="alert alert-info">
+                                                    <span>No appointments found.</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- driver Details - table showing driver information and test results -->
+                        <div id="driver-details" class="tab-content <%= tabToShow === 'driver-details' ? 'active' : '' %>">
+                            <!-- filter controls for driver details -->
+                            <form id="filterDriversForm" action="/appointment" method="GET" class="filter-form">
+                                <select id="testTypeFilter" name="testType">
+                                    <option value="">All Test Types</option>
+                                    <option value="G" <%= typeof testType !== 'undefined' && testType === 'G' ? 'selected' : '' %>>G</option>
+                                    <option value="G2" <%= typeof testType !== 'undefined' && testType === 'G2' ? 'selected' : '' %>>G2</option>
+                                </select>
+                                <select id="resultFilter" name="testResult">
+                                    <option value="">All Results</option>
+                                    <option value="Pass" <%= typeof testResult !== 'undefined' && testResult === 'Pass' ? 'selected' : '' %>>Pass</option>
+                                    <option value="Fail" <%= typeof testResult !== 'undefined' && testResult === 'Fail' ? 'selected' : '' %>>Fail</option>
+                                    <option value="Pending" <%= typeof testResult !== 'undefined' && testResult === 'Pending' ? 'selected' : '' %>>Pending</option>
+                                </select>
+                                <button type="submit">Apply Filter</button>
+                            </form>
+
+                            <!-- driver details table -->
+                            <table class="appointment-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Test Type</th>
+                                        <th>Car Make</th>
+                                        <th>Car Model</th>
+                                        <th>Test Result</th>
+                                        <th>Appointment</th>
+                                        <th>Print Status</th> 
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% if (typeof users !== 'undefined' && users && users.length > 0) { %>
+                                        <% users.forEach(driverUser => { %>
+                                            <tr>
+                                                <td><strong><%= driverUser.firstname %> <%= driverUser.lastname %></strong></td>
+                                                <td><span class="badge bg-info text-dark"><%= driverUser.testType || 'N/A' %></span></td>
+                                                <td><%= driverUser.car_details && driverUser.car_details.carMake ? driverUser.car_details.carMake : 'N/A' %></td>
+                                                <td><%= driverUser.car_details && driverUser.car_details.carModel ? driverUser.car_details.carModel : 'N/A' %></td>
+                                                <td>
+                                                    <% if (driverUser.testResult === 'Pass') { %>
+                                                        <span class="status-available">PASS</span>
+                                                    <% } else if (driverUser.testResult === 'Fail') { %>
+                                                        <span class="status-booked">FAIL</span>
+                                                    <% } else { %>
+                                                        <span class="text-muted">Pending</span>
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <% if (driverUser.appointmentDetails) { %>
+                                                        <%= driverUser.appointmentDetails.date %> at <%= driverUser.appointmentDetails.time %>
+                                                    <% } else { %>
+                                                        No Appointment
+                                                    <% } %>
+                                                </td>
+                                                <td>
+                                                    <!-- Print License button - only enabled if test result is pass -->
+                                                    <button type="button" 
+                                                            class="btn btn-sm action-button <%= driverUser.testResult === 'Pass' ? 'view' : 'btn-secondary disabled' %>"
+                                                            <%= driverUser.testResult === 'Pass' ? '' : 'disabled' %>
+                                                            onclick="printLicense('<%= driverUser._id %>')">
+                                                        <i class="fas fa-print"></i> Print License
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <!-- No results message -->
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4"> 
+                                                <div class="alert alert-info">
+                                                    <span>No driver users found.</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <%- include('layouts/footer') %>
+    <%- include('layouts/scripts') %>
+    
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const tabToShow = "<%= tabToShow %>";
+        $('.tab-button').removeClass('active');
+        $('.tab-content').removeClass('active').hide();
+        $(`.tab-button[data-tab="${tabToShow}"]`).addClass('active');
+        $(`#${tabToShow}`).addClass('active').show();
+
+        $('.tab-button').click(function() {
+            const tabId = $(this).data('tab');
+            
+            $('.tab-button').removeClass('active');
+            $(this).addClass('active');
+            
+            $('.tab-content').removeClass('active').hide();
+            $('#' + tabId).addClass('active').show();
+        });
+
+        const selectedSlots = new Set();
+
+        function resetSlotSelections() {
+            selectedSlots.clear();
+            $('.slot-btn').not('.disabled').removeClass('btn-primary').addClass('btn-outline-primary');
+            $('#selectedSlots').val('');
+        }
+
+        const dateInput = $('#appointmentDate');
+        dateInput.datepicker({
+            format: 'mm-dd-yyyy',
+            autoclose: true,
+            startDate: new Date() // Prevent selection of past dates
+        }).on('changeDate', function (e) {
+            // Show time slots and submit button when date is selected
+            $('#timeSlotsContainer').slideDown();
+            $('#submitButton').show();
+            
+            resetSlotSelections();
+        });
+        
+        // check if we need to initialize UI based on pre-selected date
+        const hasSelectedDate = <%= typeof selectedDate !== 'undefined' && selectedDate ? 'true' : 'false' %>;
+        if (hasSelectedDate) {
+            $('#timeSlotsContainer').show();
+            $('#submitButton').show();
+        }
+        
+        $('.slot-btn').not('.disabled').click(function () {
+            const slot = $(this).data('slot');
+            if (selectedSlots.has(slot)) {
+                // Deselect the slot
+                selectedSlots.delete(slot);
+                $(this).removeClass('btn-primary').addClass('btn-outline-primary');
+            } else {
+                // Select the slot
+                selectedSlots.add(slot);
+                $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+            }
+            $('#selectedSlots').val(Array.from(selectedSlots).join(','));
+        });
+
+        $('#appointmentForm').submit(function (e) {
+            if ($('#selectedSlots').val() === '') {
+                e.preventDefault();
+                alert('Please select at least one time slot');
+                return false;
+            }
+            return true;
+        });
+
+        function setFilterValuesFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+      
+            const availability = urlParams.get('availability');
+            if (availability) {
+                $('#availabilityFilter').val(availability);
+            }
+            
+            const testType = urlParams.get('testType');
+            if (testType) {
+                $('#testTypeFilter').val(testType);
+            }
+            
+            const testResult = urlParams.get('testResult');
+            if (testResult) {
+                $('#resultFilter').val(testResult);
+            }
+        }
+        
+        setFilterValuesFromURL();
+
+        $('.test-result-select').change(function() {
+            const row = $(this).closest('tr');
+            row.css('backgroundColor', 'var(--hover-light)');
+            row.css('transition', 'background-color 0.3s ease');
+            setTimeout(() => {
+                row.css('backgroundColor', '');
+            }, 1500);
+        });
+    });
+</script>
+</html>

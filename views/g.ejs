@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('layouts/header', { title: 'G Test Details' }) %>
+    <style>
+        .test-result {
+            padding: 10px 15px;
+            border-radius: 4px;
+            display: inline-block;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        .test-result-pass {
+            background-color: #e6f4ea;
+            color: #2ca02c;
+            font-weight: 600;
+        }
+        .test-result-fail {
+            background-color: #fce4e4;
+            color: #d32f2f;
+            font-weight: 600;
+        }
+        .test-result-pending {
+            background-color: #f0f0f0;
+            color: #6b7280;
+            font-style: italic;
+        }
+        .test-result-none {
+            background-color: #fef8e6;
+            color: #d97706;
+            font-style: italic;
+        }
+        .test-result-no-test {
+            background-color: #e6e6e6;
+            color: #374151;
+            font-style: italic;
+        }
+        .registration-details {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .registration-details h4 {
+            color: #1f2937;
+            margin-bottom: 15px;
+        }
+        .registration-details p {
+            margin: 8px 0;
+            font-size: 0.95rem;
+            color: #374151;
+        }
+        .registration-details strong {
+            color: #111827;
+        }
+        .alert {
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .alert-success {
+            background-color: #e6f4ea;
+            color: #1a531a;
+        }
+        .alert-danger {
+            background-color: #fce4e4;
+            color: #5a1c1c;
+        }
+        .text-danger {
+            color: #d32f2f;
+            font-weight: 500;
+        }
+        .btn-primary {
+            padding: 8px 16px;
+            border-radius: 4px;
+            background-color: #005bb5;
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .btn-primary:hover {
+            background-color: #004a99;
+        }
+    </style>
+</head>
+<body>
+    <%- include('layouts/navbar', { user: user }) %>
+
+    <header class="masthead" style="background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('/img/hero_image.jpg')">
+        <div class="container position-relative px-4 px-lg-5">
+            <div class="row gx-4 gx-lg-5 justify-content-center">
+                <div class="col-md-10 col-lg-8 col-xl-7">
+                    <div class="site-heading text-center">
+                        <h1 style="color: #ffffff">G Test Details</h1>
+                        <span class="subheading" style="color: #e5e7eb">Your registration details</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container px-4 px-lg-5">
+        <div class="row gx-4 gx-lg-5 justify-content-center">
+            <div class="col-md-10 col-lg-8 col-xl-7">
+                <div class="registration-details">
+                    <% if (message) { %>   
+                        <div class="alert alert-<%= message.type %>"><%= message.text %></div>
+                    <% } %>
+
+                    <% if ((user.firstname || '').toLowerCase() === 'default' || (user.lastname || '').toLowerCase() === 'default') { %>
+                        <p class="text-danger"> First name and last name cannot be blank. Please update your details on the G2 page first.</p>
+                        <a href="/g2" class="btn-primary">Go to G2 Page</a>
+                    <% } else { %>
+                        <h4>Registration Details: <%= user.firstname %></h4>
+                        <p><strong>First Name:</strong> <%= user.firstname %></p>
+                        <p><strong>Last Name:</strong> <%= user.lastname %></p>
+                        <p><strong>Age:</strong> <%= user.age %></p>
+                        <p><strong>License Number:</strong> 
+                            <%= user.licenseNumber.slice(-4).padStart(user.licenseNumber.length, '*') %>
+                        </p>
+
+                        <h4 class="mt-4">Car Information</h4>
+                        <p><strong>Car Make:</strong> <%= user.car_details.carMake %></p>
+                        <p><strong>Car Model:</strong> <%= user.car_details.carModel %></p>
+                        <p><strong>Car Year:</strong> <%= user.car_details.carYear %></p>
+                        <p><strong>Car Plate:</strong> <%= user.car_details.carPlate %></p>
+
+                        <h4 class="mt-4">Test Result</h4>
+                        <p><strong>Test Type:</strong> <%= user.testType || 'N/A' %></p>
+
+                        <% if (!user.testType) { %>
+                            <p class="test-result test-result-no-test">No test taken.</p>
+                        <% } else if (!user.testResult || user.testResult === 'Pending') { %>
+                            <p class="test-result test-result-none">Result is not published yet.</p>
+                        <% } else if (user.testResult === 'Pass') { %>
+                            <p class="test-result test-result-pass">PASS</p>
+                        <% } else if (user.testResult === 'Fail') { %>
+                            <p class="test-result test-result-fail">FAIL</p>
+                        <% } %>
+
+                        <h4 class="mt-4">Appointment Information</h4>
+                        <% if (appointment) { %>
+                            <p><strong>Appointment Date:</strong> <%= appointment.date %></p>
+                            <p><strong>Appointment Time:</strong> <%= appointment.time %></p>
+                        <% } else { %>
+                            <p class="text-danger">No appointment details found.</p>
+                        <% } %>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <%- include('layouts/footer') %>
+    <%- include('layouts/scripts') %>
+</body>
+</html>
